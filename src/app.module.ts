@@ -1,33 +1,38 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { validateEnvironment } from './config/env.validation';
 
 @Module({
   imports: [
-    // Load .env variables
     ConfigModule.forRoot({
       isGlobal: true,
+      cache: true,
+      envFilePath: '.env',
+      validate: validateEnvironment,
     }),
-
-    // PostgreSQL connection
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-
-      autoLoadEntities: true,
-
-      // Development only
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): TypeOrmModuleOptions => ({
+        type: 'postgres',
+        host: configService.getOrThrow<string>('DB_HOST'),
+        port: configService.getOrThrow<number>('DB_PORT'),
+        username: configService.getOrThrow<string>('DB_USERNAME'),
+        password: configService.getOrThrow<string>('DB_PASSWORD'),
+        database: configService.getOrThrow<string>('DB_NAME'),
+        autoLoadEntities: true,
+        synchronize: false,
+        migrationsRun: false,
+        logging:
+          configService.get<string>('NODE_ENV') === 'development'
+            ? ['error', 'warn']
+            : false,
+      }),
     }),
   ],
-
   controllers: [AppController],
   providers: [AppService],
 })

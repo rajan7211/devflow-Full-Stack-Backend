@@ -14,9 +14,15 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
-    });
+  it('returns the starter message at the API root', () => {
+    expect(appController.getHello()).toBe('Hello World!');
+  });
+
+  it('returns a healthy status and an ISO timestamp', () => {
+    const result = appController.getHealth();
+
+    expect(result.status).toBe('ok');
+    expect(result.service).toBe('devflow-backend');
+    expect(Number.isNaN(Date.parse(result.timestamp))).toBe(false);
   });
 });
