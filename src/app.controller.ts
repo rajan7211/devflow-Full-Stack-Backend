@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import moment from 'moment';
 import { AppService } from './app.service';
 
 @Controller()
@@ -15,7 +16,7 @@ export class AppController {
     return {
       status: 'ok',
       service: 'devflow-backend',
-      timestamp: new Date().toISOString(),
+      timestamp: moment().toISOString(),
     };
   }
 }

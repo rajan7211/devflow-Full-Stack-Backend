@@ -48,9 +48,7 @@ export class AuthController {
     status: HttpStatus.CONFLICT,
     description: 'Email is already registered and active.',
   })
-  async register(
-    @Body() dto: RegisterDto,
-  ): Promise<{ message: string }> {
+  async register(@Body() dto: RegisterDto): Promise<{ message: string }> {
     return this.authService.register(dto);
   }
 

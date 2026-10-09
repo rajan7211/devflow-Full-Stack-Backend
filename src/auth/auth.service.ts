@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import moment from 'moment';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import {
@@ -81,7 +82,7 @@ export class AuthService {
 
     // Generate 6-digit OTP with 10-minute expiry
     const otp = this.generateNumericOtp();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = moment().add(10, 'minutes').toDate();
 
     // First registered user becomes ADMIN, others become DEVELOPER
     const totalUsers = await this.usersService.count();
@@ -130,7 +131,7 @@ export class AuthService {
       throw new BadRequestException('Invalid verification code');
     }
 
-    if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) {
+    if (!user.otpExpiresAt || moment().isAfter(user.otpExpiresAt)) {
       throw new BadRequestException(
         'Verification code has expired. Please request a new one.',
       );
@@ -164,10 +165,12 @@ export class AuthService {
 
     // 60-second cooldown check
     if (user.otpLastSentAt) {
-      const secondsSinceLastOtp =
-        (Date.now() - new Date(user.otpLastSentAt).getTime()) / 1000;
+      const secondsSinceLastOtp = moment().diff(
+        moment(user.otpLastSentAt),
+        'seconds',
+      );
       if (secondsSinceLastOtp < 60) {
-        const waitSeconds = Math.ceil(60 - secondsSinceLastOtp);
+        const waitSeconds = 60 - secondsSinceLastOtp;
         throw new BadRequestException(
           `Please wait ${waitSeconds} seconds before requesting a new code.`,
         );
@@ -180,7 +183,7 @@ export class AuthService {
         : OtpPurpose.REGISTRATION;
 
     const newOtp = this.generateNumericOtp();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = moment().add(10, 'minutes').toDate();
 
     await this.usersService.updateOtp(user.id, newOtp, purpose, expiresAt);
     await this.mailService.sendOtpEmail(user.email, newOtp, purpose);
@@ -291,7 +294,7 @@ export class AuthService {
     }
 
     const otp = this.generateNumericOtp();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = moment().add(10, 'minutes').toDate();
 
     await this.usersService.updateOtp(
       user.id,
@@ -328,7 +331,7 @@ export class AuthService {
       throw new BadRequestException('Invalid reset code purpose');
     }
 
-    if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) {
+    if (!user.otpExpiresAt || moment().isAfter(user.otpExpiresAt)) {
       throw new BadRequestException(
         'Reset code has expired. Please request a new code.',
       );
