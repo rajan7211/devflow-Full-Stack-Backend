@@ -104,4 +104,3 @@ export function validateEnvironment(
     JWT_SECRET: jwtSecret,
   };
 }
-

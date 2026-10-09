@@ -6,8 +6,17 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validateEnvironment } from './config/env.validation';
 
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { MailModule } from './mail/mail.module';
+import { allEntities } from './common/entities';
+
 @Module({
   imports: [
+    UsersModule,
+    AuthModule,
+    MailModule,
+
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
@@ -23,8 +32,9 @@ import { validateEnvironment } from './config/env.validation';
         username: configService.getOrThrow<string>('DB_USERNAME'),
         password: configService.getOrThrow<string>('DB_PASSWORD'),
         database: configService.getOrThrow<string>('DB_NAME'),
+        entities: allEntities,
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: configService.get<string>('NODE_ENV') === 'development',
         migrationsRun: false,
         logging:
           configService.get<string>('NODE_ENV') === 'development'

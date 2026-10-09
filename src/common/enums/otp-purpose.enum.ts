@@ -1,0 +1,4 @@
+export enum OtpPurpose {
+  REGISTRATION = 'REGISTRATION',
+  RESET_PASSWORD = 'RESET_PASSWORD',
+}
